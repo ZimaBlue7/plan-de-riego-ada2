@@ -1,0 +1,165 @@
+"""
+io_handler.py — Lectura y escritura de archivos para Riego Óptimo.
+
+Maneja:
+- Lectura de fincas desde archivos de texto (sección 3.4.1).
+- Escritura de soluciones a archivos de texto (sección 3.4.2).
+- Lectura de soluciones previamente guardadas.
+- Exportación de comparaciones a CSV.
+"""
+
+import csv
+from models import Finca, Tablon
+
+
+def leer_finca_desde_archivo(path: str) -> Finca:
+    """
+    Sección 3.4.1 — Lee una finca desde un archivo de texto.
+
+    Formato esperado:
+        Línea 1: n (número de tablones)
+        Líneas 2..n+1: ts,tr,p,rp (separados por coma)
+
+    Args:
+        path: Ruta al archivo de texto.
+
+    Returns:
+        Objeto Finca con los tablones leídos.
+
+    Raises:
+        FileNotFoundError: Si el archivo no existe.
+        ValueError: Si el formato es incorrecto, indica el número de línea.
+    """
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            lineas = f.readlines()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"No se encontró el archivo: {path}")
+
+    if not lineas:
+        raise ValueError("El archivo está vacío")
+
+    # Línea 1: n
+    try:
+        n = int(lineas[0].strip())
+    except ValueError:
+        raise ValueError(
+            f"Línea 1: Se esperaba un entero (n), se encontró: '{lineas[0].strip()}'"
+        )
+
+    if len(lineas) < n + 1:
+        raise ValueError(
+            f"Se esperaban {n + 1} líneas ({n} tablones + 1 encabezado), "
+            f"pero el archivo tiene {len(lineas)} líneas"
+        )
+
+    tablones: list[Tablon] = []
+    for i in range(1, n + 1):
+        linea = lineas[i].strip()
+        if not linea:
+            raise ValueError(f"Línea {i + 1}: Línea vacía, se esperaban datos del tablón")
+
+        partes = linea.split(',')
+        if len(partes) != 4:
+            raise ValueError(
+                f"Línea {i + 1}: Se esperaban 4 valores (ts,tr,p,rp), "
+                f"se encontraron {len(partes)}: '{linea}'"
+            )
+
+        try:
+            ts, tr, p, rp = int(partes[0]), int(partes[1]), int(partes[2]), int(partes[3])
+        except ValueError:
+            raise ValueError(
+                f"Línea {i + 1}: Todos los valores deben ser enteros: '{linea}'"
+            )
+
+        try:
+            tablon = Tablon(id=i - 1, ts=ts, tr=tr, p=p, rp=rp)
+        except ValueError as e:
+            raise ValueError(f"Línea {i + 1}: {e}")
+
+        tablones.append(tablon)
+
+    return Finca(tablones=tablones)
+
+
+def escribir_solucion_a_archivo(solucion, path: str) -> None:
+    """
+    Sección 3.4.2 — Escribe una solución a un archivo de texto.
+
+    Formato:
+        Línea 1: costo total
+        Líneas 2..n+1: índice del tablón en orden
+
+    Args:
+        solucion: Objeto Solucion a escribir.
+        path: Ruta del archivo de salida.
+    """
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(f"{solucion.costo_total}\n")
+        for tid in solucion.permutacion:
+            f.write(f"{tid}\n")
+
+
+def leer_solucion_desde_archivo(path: str) -> tuple[float, list[int]]:
+    """
+    Lee una solución previamente guardada.
+
+    Args:
+        path: Ruta al archivo de solución.
+
+    Returns:
+        Tupla (costo, permutacion).
+
+    Raises:
+        FileNotFoundError: Si el archivo no existe.
+        ValueError: Si el formato es incorrecto.
+    """
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            lineas = f.readlines()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"No se encontró el archivo: {path}")
+
+    if not lineas:
+        raise ValueError("El archivo de solución está vacío")
+
+    try:
+        costo = float(lineas[0].strip())
+    except ValueError:
+        raise ValueError(f"Línea 1: Se esperaba un número (costo), encontrado: '{lineas[0].strip()}'")
+
+    permutacion: list[int] = []
+    for i, linea in enumerate(lineas[1:], start=2):
+        linea = linea.strip()
+        if linea:
+            try:
+                permutacion.append(int(linea))
+            except ValueError:
+                raise ValueError(f"Línea {i}: Se esperaba un entero, encontrado: '{linea}'")
+
+    return costo, permutacion
+
+
+def exportar_comparacion_csv(resultados: list[dict], path: str) -> None:
+    """
+    Exporta tabla de comparación de benchmark a CSV.
+
+    Columnas: n, algoritmo, costo, tiempo_ms, es_optima
+
+    Args:
+        resultados: Lista de diccionarios con las métricas.
+        path: Ruta del archivo CSV de salida.
+    """
+    campos = ['n', 'algoritmo', 'costo', 'tiempo_ms', 'es_optima']
+    with open(path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=campos)
+        writer.writeheader()
+        for r in resultados:
+            writer.writerow({
+                'n': r.get('n', ''),
+                'algoritmo': r.get('algoritmo', ''),
+                'costo': r.get('costo', ''),
+                'tiempo_ms': r.get('tiempo_ms', ''),
+                'es_optima': r.get('es_optima', ''),
+            })
