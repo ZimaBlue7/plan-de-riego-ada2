@@ -88,8 +88,10 @@ def roV(finca: Finca) -> Solucion:
     """
     ALGORITMO VORAZ — Sección 3.2
 
-    Algoritmo voraz (greedy). El estudiante debe elegir y documentar
-    su criterio voraz aquí.
+    Criterio Voraz (EDF - Earliest Deadline First):
+    Ordena los tablones de forma ascendente según su fecha límite (deadline),
+    calculada como: (ts - tr)/p. Al atender primero los tablones que "vencen"
+    antes, se intenta minimizar el costo.
 
     Complejidad esperada: O(n log n)
     Puede o no retornar la solución óptima.
@@ -99,12 +101,19 @@ def roV(finca: Finca) -> Solucion:
 
     Returns:
         La Solucion obtenida por el criterio voraz.
-
-    Raises:
-        NotImplementedError: Mientras el estudiante no la implemente.
     """
-    # TODO: implementar algoritmo voraz
-    raise NotImplementedError("Pendiente de implementación — Sección 3.2")
+    inicio = time.perf_counter()
+
+    deadlines = {}
+    for T in finca.tablones:
+        deadlines[T.id] = (T.ts - T.tr)/T.p
+    
+    sorted_tablones = sorted(finca.tablones, key=lambda T: deadlines[T.id])
+    permutacion = [T.id for T in sorted_tablones]
+    
+    tiempo_computo = time.perf_counter() - inicio
+
+    return construir_solucion(finca, permutacion, 'V', tiempo_computo)
 
 
 def roPD(finca: Finca) -> Solucion:
