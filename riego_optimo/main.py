@@ -17,13 +17,13 @@ def main() -> None:
     # 1. Auto-verificación contra ejemplos del enunciado
     from calculos import verificar_ejemplo_enunciado
 
-    # print("═══ Verificación de ejemplos del enunciado (§2.3) ═══")
-    # ok = verificar_ejemplo_enunciado()
-    # if not ok:
-    #     print("⚠️  ADVERTENCIA: Algunas verificaciones fallaron. Revise calculos.py.")
-    # else:
-    #     print("✅ Todas las verificaciones pasaron correctamente.")
-    # print()
+    print("═══ Verificación de ejemplos del enunciado (§2.3) ═══")
+    ok = verificar_ejemplo_enunciado()
+    if not ok:
+        print("ADVERTENCIA: Algunas verificaciones fallaron. Revise calculos.py.")
+    else:
+        print("Todas las verificaciones pasaron correctamente.")
+    print()
 
     # 2. Lanzar la GUI
     from gui_ctk import RiegoOptimoApp
