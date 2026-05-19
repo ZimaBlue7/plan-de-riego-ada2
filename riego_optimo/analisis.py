@@ -214,25 +214,6 @@ def benchmark_escalabilidad(
     return todos
 
 
-def calcular_gap_optimalidad(
-    metricas_voraz: MetricasEjecucion,
-    metricas_fb: MetricasEjecucion
-) -> float:
-    """
-    Calcula el gap de optimalidad en porcentaje.
-    Gap = (costo_voraz - costo_optimo) / costo_optimo × 100
-
-    Args:
-        metricas_voraz: Métricas del algoritmo voraz.
-        metricas_fb: Métricas de fuerza bruta (óptimo).
-
-    Returns:
-        Porcentaje de gap de optimalidad.
-    """
-    if metricas_fb.costo == 0:
-        return 0.0
-    return (metricas_voraz.costo - metricas_fb.costo) / metricas_fb.costo * 100
-
 
 def resumen_tabla(lista_metricas: list[MetricasEjecucion]) -> str:
     """
