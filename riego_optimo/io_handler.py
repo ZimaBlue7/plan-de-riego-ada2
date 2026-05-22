@@ -8,7 +8,6 @@ Maneja:
 - Exportación de comparaciones a CSV.
 """
 
-import csv
 from models import Finca, Tablon
 
 
@@ -31,7 +30,7 @@ def leer_finca_desde_archivo(path: str) -> Finca:
         ValueError: Si el formato es incorrecto, indica el número de línea.
     """
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             lineas = f.readlines()
     except FileNotFoundError:
         raise FileNotFoundError(f"No se encontró el archivo: {path}")
@@ -57,9 +56,11 @@ def leer_finca_desde_archivo(path: str) -> Finca:
     for i in range(1, n + 1):
         linea = lineas[i].strip()
         if not linea:
-            raise ValueError(f"Línea {i + 1}: Línea vacía, se esperaban datos del tablón")
+            raise ValueError(
+                f"Línea {i + 1}: Línea vacía, se esperaban datos del tablón"
+            )
 
-        partes = linea.split(',')
+        partes = linea.split(",")
         if len(partes) != 4:
             raise ValueError(
                 f"Línea {i + 1}: Se esperaban 4 valores (ts,tr,p,rp), "
@@ -67,7 +68,12 @@ def leer_finca_desde_archivo(path: str) -> Finca:
             )
 
         try:
-            ts, tr, p, rp = int(partes[0]), int(partes[1]), int(partes[2]), int(partes[3])
+            ts, tr, p, rp = (
+                int(partes[0]),
+                int(partes[1]),
+                int(partes[2]),
+                int(partes[3]),
+            )
         except ValueError:
             raise ValueError(
                 f"Línea {i + 1}: Todos los valores deben ser enteros: '{linea}'"
@@ -85,81 +91,12 @@ def leer_finca_desde_archivo(path: str) -> Finca:
 
 def escribir_solucion_a_archivo(solucion, path: str) -> None:
     """
-    Sección 3.4.2 — Escribe una solución a un archivo de texto.
-
+    Seccion 3.4.2 - Escribe una solucion a un achivo de texto
     Formato:
-        Línea 1: costo total
-        Líneas 2..n+1: índice del tablón en orden
-
-    Args:
-        solucion: Objeto Solucion a escribir.
-        path: Ruta del archivo de salida.
+        Linea 1: Costo total
+        Linea 2..n+1 indice del tablo en orden
     """
-    with open(path, 'w', encoding='utf-8') as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(f"{solucion.costo_total}\n")
         for tid in solucion.permutacion:
             f.write(f"{tid}\n")
-
-
-def leer_solucion_desde_archivo(path: str) -> tuple[float, list[int]]:
-    """
-    Lee una solución previamente guardada.
-
-    Args:
-        path: Ruta al archivo de solución.
-
-    Returns:
-        Tupla (costo, permutacion).
-
-    Raises:
-        FileNotFoundError: Si el archivo no existe.
-        ValueError: Si el formato es incorrecto.
-    """
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            lineas = f.readlines()
-    except FileNotFoundError:
-        raise FileNotFoundError(f"No se encontró el archivo: {path}")
-
-    if not lineas:
-        raise ValueError("El archivo de solución está vacío")
-
-    try:
-        costo = float(lineas[0].strip())
-    except ValueError:
-        raise ValueError(f"Línea 1: Se esperaba un número (costo), encontrado: '{lineas[0].strip()}'")
-
-    permutacion: list[int] = []
-    for i, linea in enumerate(lineas[1:], start=2):
-        linea = linea.strip()
-        if linea:
-            try:
-                permutacion.append(int(linea))
-            except ValueError:
-                raise ValueError(f"Línea {i}: Se esperaba un entero, encontrado: '{linea}'")
-
-    return costo, permutacion
-
-
-def exportar_comparacion_csv(resultados: list[dict], path: str) -> None:
-    """
-    Exporta tabla de comparación de benchmark a CSV.
-
-    Columnas: n, algoritmo, costo, tiempo_ms, es_optima
-
-    Args:
-        resultados: Lista de diccionarios con las métricas.
-        path: Ruta del archivo CSV de salida.
-    """
-    campos = ['n', 'algoritmo', 'costo', 'tiempo_ms', 'es_optima']
-    with open(path, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=campos)
-        writer.writeheader()
-        for r in resultados:
-            writer.writerow({
-                'n': r.get('n', ''),
-                'algoritmo': r.get('algoritmo', ''),
-                'costo': r.get('costo', ''),
-                'tiempo_ms': r.get('tiempo_ms', ''),
-                'es_optima': r.get('es_optima', ''),
-            })

@@ -88,8 +88,6 @@ class Finca:
 
     Métodos:
         get_tablon(id): Retorna el tablón con el id especificado.
-        to_dict(): Serializa la finca a un diccionario.
-        from_dict(d): Crea una Finca desde un diccionario (classmethod).
     """
     tablones: list[Tablon]
 
@@ -115,59 +113,6 @@ class Finca:
             if tablon.id == tablon_id:
                 return tablon
         raise ValueError(f"No se encontró tablón con id={tablon_id}")
-
-    def to_dict(self) -> dict:
-        """
-        Serializa la finca a un diccionario.
-
-        Returns:
-            Diccionario con la estructura:
-            {
-                'tablones': [
-                    {'id': int, 'ts': int, 'tr': int, 'p': int, 'rp': int},
-                    ...
-                ]
-            }
-        """
-        return {
-            'tablones': [
-                {
-                    'id': t.id,
-                    'ts': t.ts,
-                    'tr': t.tr,
-                    'p': t.p,
-                    'rp': t.rp
-                }
-                for t in self.tablones
-            ]
-        }
-
-    @classmethod
-    def from_dict(cls, d: dict) -> Finca:
-        """
-        Crea una Finca desde un diccionario.
-
-        Args:
-            d: Diccionario con la estructura esperada por to_dict().
-
-        Returns:
-            Nueva instancia de Finca.
-
-        Raises:
-            KeyError: Si faltan claves requeridas en el diccionario.
-        """
-        tablones = [
-            Tablon(
-                id=t['id'],
-                ts=t['ts'],
-                tr=t['tr'],
-                p=t['p'],
-                rp=t['rp']
-            )
-            for t in d['tablones']
-        ]
-        return cls(tablones=tablones)
-
     def __repr__(self) -> str:
         return f"Finca(n={self.n}, tablones={self.tablones})"
 
@@ -229,7 +174,6 @@ class Solucion:
         algoritmo:      Nombre del algoritmo ('FB', 'V' o 'PD').
 
     Métodos:
-        es_valida(finca): Verifica si la permutación es válida para la finca.
         resumen(): Retorna un resumen formateado de la solución.
     """
     permutacion: list[int]
@@ -237,23 +181,6 @@ class Solucion:
     resultados: list[ResultadoTablon]
     tiempo_computo: float
     algoritmo: str
-
-    def es_valida(self, finca: Finca) -> bool:
-        """
-        Verifica que la permutación sea válida para la finca dada.
-
-        Una permutación es válida si contiene exactamente los ids 0..n-1,
-        cada uno exactamente una vez.
-
-        Args:
-            finca: La finca contra la cual validar.
-
-        Returns:
-            True si la permutación es válida, False en caso contrario.
-        """
-        expected = set(range(finca.n))
-        return set(self.permutacion) == expected and len(self.permutacion) == finca.n
-
     def resumen(self) -> str:
         """
         Genera un resumen formateado de la solución para visualización.

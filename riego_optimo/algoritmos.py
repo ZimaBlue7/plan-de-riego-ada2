@@ -11,7 +11,7 @@ Cada función recibe una Finca y retorna una Solucion.
 
 import time
 from models import Finca, Solucion
-from calculos import calcular_costo_total, construir_solucion
+from calculos import calcular_costo_individual, calcular_costo_total, construir_solucion
 
 
 def roFB(finca: Finca) -> Solucion:
@@ -41,13 +41,13 @@ def roFB(finca: Finca) -> Solucion:
     n = finca.n
     ids = [t.id for t in finca.tablones]  # lista de ids disponibles
 
-    mejor_costo = [float('inf')]           # lista para poder mutar desde closure
-    mejor_perm  = [None]
+    mejor_costo = [float("inf")]  # lista para poder mutar desde closure
+    mejor_perm = [None]
 
     # --- generador de permutaciones por backtracking ---
 
     permutacion_actual = []
-    usado = [False] * n   # usado[i] = True si ids[i] ya está en la permutacion_actual
+    usado = [False] * n  # usado[i] = True si ids[i] ya está en la permutacion_actual
 
     def backtrack():
         # Caso base: permutación completa
@@ -55,7 +55,7 @@ def roFB(finca: Finca) -> Solucion:
             costo, _ = calcular_costo_total(finca, permutacion_actual)
             if costo < mejor_costo[0]:
                 mejor_costo[0] = costo
-                mejor_perm[0]  = permutacion_actual[:]   # copia
+                mejor_perm[0] = permutacion_actual[:]  # copia
             return
 
         # Paso recursivo: probar cada tablón no usado en la posición actual
@@ -79,8 +79,8 @@ def roFB(finca: Finca) -> Solucion:
     return construir_solucion(
         finca=finca,
         permutacion=mejor_perm[0],
-        algoritmo='FB',
-        tiempo_computo=tiempo_total
+        algoritmo="FB",
+        tiempo_computo=tiempo_total,
     )
 
 
@@ -106,14 +106,14 @@ def roV(finca: Finca) -> Solucion:
 
     deadlines = {}
     for T in finca.tablones:
-        deadlines[T.id] = (T.ts - T.tr)/T.p
-    
+        deadlines[T.id] = (T.ts - T.tr) / T.p
+
     sorted_tablones = sorted(finca.tablones, key=lambda T: deadlines[T.id])
     permutacion = [T.id for T in sorted_tablones]
-    
+
     tiempo_computo = time.perf_counter() - inicio
 
-    return construir_solucion(finca, permutacion, 'V', tiempo_computo)
+    return construir_solucion(finca, permutacion, "V", tiempo_computo)
 
 
 def roPD(finca: Finca) -> Solucion:
@@ -134,5 +134,44 @@ def roPD(finca: Finca) -> Solucion:
     Raises:
         NotImplementedError: Mientras el estudiante no la implemente.
     """
-    # TODO: implementar programación dinámica
-    raise NotImplementedError("Pendiente de implementación — Sección 3.3")
+    inicio = time.perf_counter()
+
+    tablones = finca.tablones
+    n = finca.n
+
+    if n == 0:
+        return construir_solucion(finca, [], "PD", time.perf_counter() - inicio)
+
+    total_masks = 1 << n
+    sum_tr = [0] * total_masks
+    for mask in range(1, total_masks):
+        lsb = mask & -mask
+        j = lsb.bit_length() - 1
+        sum_tr[mask] = sum_tr[mask ^ lsb] + tablones[j].tr
+
+    dp = [float("inf")] * total_masks
+    parent = [None] * total_masks
+    dp[0] = 0.0
+
+    for mask in range(1, total_masks):
+        for j in range(n):
+            if mask & (1 << j):
+                prev = mask ^ (1 << j)
+                start_time = sum_tr[prev]
+                costo = dp[prev] + calcular_costo_individual(tablones[j], start_time)
+                if costo < dp[mask]:
+                    dp[mask] = costo
+                    parent[mask] = (prev, j)
+
+    permutacion_indices = []
+    mask = total_masks - 1
+    while mask:
+        prev, j = parent[mask]
+        permutacion_indices.append(j)
+        mask = prev
+
+    permutacion_indices.reverse()
+    permutacion = [tablones[j].id for j in permutacion_indices]
+
+    tiempo_total = time.perf_counter() - inicio
+    return construir_solucion(finca, permutacion, "PD", tiempo_total)
