@@ -30,7 +30,7 @@ def leer_finca_desde_archivo(path: str) -> Finca:
         ValueError: Si el formato es incorrecto, indica el número de línea.
     """
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             lineas = f.readlines()
     except FileNotFoundError:
         raise FileNotFoundError(f"No se encontró el archivo: {path}")
@@ -56,9 +56,11 @@ def leer_finca_desde_archivo(path: str) -> Finca:
     for i in range(1, n + 1):
         linea = lineas[i].strip()
         if not linea:
-            raise ValueError(f"Línea {i + 1}: Línea vacía, se esperaban datos del tablón")
+            raise ValueError(
+                f"Línea {i + 1}: Línea vacía, se esperaban datos del tablón"
+            )
 
-        partes = linea.split(',')
+        partes = linea.split(",")
         if len(partes) != 4:
             raise ValueError(
                 f"Línea {i + 1}: Se esperaban 4 valores (ts,tr,p,rp), "
@@ -66,7 +68,12 @@ def leer_finca_desde_archivo(path: str) -> Finca:
             )
 
         try:
-            ts, tr, p, rp = int(partes[0]), int(partes[1]), int(partes[2]), int(partes[3])
+            ts, tr, p, rp = (
+                int(partes[0]),
+                int(partes[1]),
+                int(partes[2]),
+                int(partes[3]),
+            )
         except ValueError:
             raise ValueError(
                 f"Línea {i + 1}: Todos los valores deben ser enteros: '{linea}'"
@@ -80,3 +87,16 @@ def leer_finca_desde_archivo(path: str) -> Finca:
         tablones.append(tablon)
 
     return Finca(tablones=tablones)
+
+
+def escribir_solucion_a_archivo(solucion, path: str) -> None:
+    """
+    Seccion 3.4.2 - Escribe una solucion a un achivo de texto
+    Formato:
+        Linea 1: Costo total
+        Linea 2..n+1 indice del tablo en orden
+    """
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(f"{solucion.costo_total}\n")
+        for tid in solucion.permutacion:
+            f.write(f"{tid}\n")
